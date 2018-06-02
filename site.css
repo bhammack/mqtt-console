@@ -1,0 +1,24 @@
+html, body {
+    height: 100%;
+}
+
+/* .container {
+    min-height: 100%;
+    overflow: hidden;
+} */
+
+/*
+.page-wrapper {
+    height: calc(100vh - 56px);
+}
+
+
+input[type=color].form-control {
+    height: 38px;
+    padding: 1px;
+}
+
+.hidden {
+    display: none;
+}
+*/

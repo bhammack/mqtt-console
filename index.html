@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Mqtt Console</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <link rel="stylesheet" href="./site.css">
+    </head>
+    <body>
+        <nav class="navbar navbar-dark bg-dark">
+            <a class="navbar-brand" href="#">Mqtt Console</a>
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" href="#">Test</a></li>
+            </ul>
+        </nav>
+        <div id="app" class="page-wrapper container border">
+            <div class="row h-100">
+                <aside class="col-3 border">
+                    <h4>Subscriptions</h4>
+                    <div class="input-group">
+                        <input type="text" placeholder="Topic" class="form-control" v-model="sub.topic">
+                        <!-- <select class="form-control" v-model="sub.qos">
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                        </select> -->
+                        <!-- <input type="color" class="form-control"> -->
+                        <div class="input-group-append">
+                                <button v-on:click="subscribe" type="button" class="btn btn-success btn-sm"><i class="fas fa-plus-square"></i></button>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <ul class="list-group">
+                        <li v-for="sub in subs" class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>{{ sub.topic }}</div>
+                            <!-- <span class="badge badge-primary">{{ sub.qos }}</span> -->
+                            <button v-on:click="unsubscribe(sub)"class="btn btn-danger btn-sm"><i class="fas fa-minus-square"></i></button>
+                        </li>
+                    </ul>
+                </aside>
+                <main class="col-9">
+                    <div class="row" style="height: 70%;">
+                        <div id="messagesDiv" class="col-12" style="overflow-y: scroll;" v-chat-scroll>
+                            <ul class="list-group list-group-flush">
+                                <li v-for="message in messages" class="list-group-item">
+                                    <div class="d-flex flex-row justify-content-between align-items-center">
+                                        <strong>{{ message.topic }}</strong>
+                                        <small>{{ message.datetime }}</small>
+                                    </div>
+                                    <div class="d-flex flex-row">
+                                        <!-- <pre class="pre-scrollable" v-if="message.isJSON">{{ message.payload }}</pre> -->
+                                        <!-- <div v-else>{{ message.payload }}</div> -->
+                                        <div>{{ message.payload }}</div>                                        
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+
+
+
+                    </div>
+                    <div class="row border" style="height: 30%;">
+                        <div class="col-12">
+                            <div class="form-row">
+                                <div class="form-group col-10">
+                                    <label>Topic</label>
+                                    <input type="text" class="form-control" v-model="pub.topic">
+                                </div>
+                                <div class="form-group col-1">
+                                    <label>QoS</label>
+                                    <select class="form-control" v-model="pub.qos">
+                                        <option value="0">0</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                    </select>
+                                </div>
+                                <!-- <div class="form-group col-1">
+                                    <label>Retain?</label>
+                                    <div class="btn-group d-flex">
+                                        <button type="button" class="btn btn-primary btn-block" v-on:click="toggleRetain">
+                                            <i class="fas fa-square"></i>
+                                        </button>
+                                    </div>
+                                </div> -->
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-12">
+                                    <label>Message</label>
+                                    <div class="input-group">
+                                        <textarea class="form-control" style="font-family:monospace;" v-model="pub.message"></textarea>
+                                        <div class="input-group-append">
+                                            <button v-on:click="publish" type="button" class="btn btn-success"><i class="fas fa-paper-plane"></i> Send</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+
+
+
+        <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/solid.js" integrity="sha384-+Ga2s7YBbhOD6nie0DzrZpJes+b2K1xkpKxTFFcx59QmVPaSA8c7pycsNaFwUK6l" crossorigin="anonymous"></script>
+        <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/fontawesome.js" integrity="sha384-7ox8Q2yzO/uWircfojVuCQOZl+ZZBg2D2J5nkpLqzH1HY0C1dHlTKIbpRz/LG23c" crossorigin="anonymous"></script>
+
+        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+        
+        <script src="https://unpkg.com/mqtt@2.16.0/dist/mqtt.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.5.13/dist/vue.js"></script>
+        <script src="https://gitcdn.link/repo/theomessin/vue-chat-scroll/master/dist/vue-chat-scroll.js"></script>
+        <script src="./app.js"></script>
+    </body>
+</html>
