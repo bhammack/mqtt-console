@@ -1,30 +1,48 @@
 var vm = new Vue({
     el: '#app',
     data: {
-        subs: [],
-        sub: {
-            qos: 0
+        connection: {
+            hostname: 'broker.mqttdashboard.com',
+            port: 8000,
+            clientId: 'mqttjs_' + Math.random().toString(16).substr(2, 8),
+            username: '',
+            password: ''
         },
-        pub: {
-            retain: false
+        subscriptions: [],
+        subscription: {
+            topic: '',
+            qos: 0,
+            color: '#ffffff'
+        },
+        publication: {
+            topic: '',
+            qos: 0,
+            retain: false,
+            message: ''
         },
         messages: [],
-        client: {}
+        client: {
+            connected: false
+        }
     },
     methods: {
         connect: function() {
-            var vu = this;
-            this.client = mqtt.connect('ws://broker.mqttdashboard.com:8000/mqtt');
+            var domain = 'ws://' + this.connection.hostname + ':' + this.connection.port + '/mqtt';
+            console.log(domain);
+            this.client = mqtt.connect(domain, {
+                reconnectPeriod: 10000
+            });
             this.client.on('connect', function() {
                 console.log('connected');
             });
             this.client.on('message', function(topic, message, packet) {
-                //console.log(topic, message.toString()); 
                 var payload = message.toString();
-                vu.messages.push({
+                vm.messages.push({
                     isJSON: vm.isJSON(payload),
                     datetime: new Date().toLocaleString(),
-                    topic: topic, 
+                    topic: topic,
+                    qos: packet.qos,
+                    retain: packet.retain,
                     payload: payload
                 });
             });
@@ -44,49 +62,59 @@ var vm = new Vue({
                 console.log('end');
             });
         },
-        publish: function() {
-            // publish pub.message on pub.topic with pub.qos and pub.retain...
-            //client.publish
-            this.client.publish(this.pub.topic, this.pub.message, {qos: this.pub.qos, retain: false}, function(err) {
-                if (err) {
-                    alert(err);
-                }
-            })
+        disconnect: function() {
+            this.client.end();
+            this.subscriptions = [];
+            this.messages = [];
         },
-        subscribe: function(event) {
-            // subscribe to pub.topic with pub.qos
-            // make sure to add to pubs list so we can color code messages as they arrive\
-            this.client.subscribe(this.sub.topic, {}, function(err, granted) {
-                if (err) {
-                    alert(err);
-                } else {
-                    for (var i = 0; i < granted.length; i++) {
-                        vm.subs.push({topic: granted[i].topic, qos: granted[i].qos});
+        publish: function() {
+            this.client.publish(
+                this.publication.topic, 
+                this.publication.message, 
+                {
+                    qos: this.publication.qos, 
+                    retain: this.publication.retain
+                }, 
+                function(err) {
+                    if (err) {
+                        alert(err);
+                    } else {
+                        vm.publication.message = '';
                     }
                 }
+            );
+
+        },
+        subscribe: function(event) {
+            this.client.subscribe(
+                this.subscription.topic, 
+                {
+                    qos: this.subscription.qos
+                },
+                function(err, granted) {
+                    if (err) {
+                        alert(err);
+                    } else {
+                        for (var i = 0; i < granted.length; i++) {
+                            vm.subscriptions.push({topic: granted[i].topic, qos: granted[i].qos});
+                        }
+                        vm.subscription.topic = '';
+                    }
             });
         },
-        unsubscribe: function(sub) {
-            this.client.unsubscribe(sub.topic, function(err) {
+        unsubscribe: function(subscription) {
+            this.client.unsubscribe(subscription.topic, function(err) {
                 if (err) {
                     alert(err);
                 }
             });
-            var index = this.subs.indexOf(sub);
+            var index = this.subscriptions.indexOf(subscription);
             if (index > -1) {
-                this.subs.splice(index, 1);
+                this.subscriptions.splice(index, 1);
             }
         },
-        toggleRetain: function(event) {
-            if (vm.pub.retain) {
-                vm.pub.retain = false;
-                event.target.innerHTML = '<i class="fas fa-square"></i>';
-            }
-            else
-            {
-                vm.pub.retain = true;
-                event.target.innerHTML = '<i class="fas fa-check-square"></i>';
-            }
+        toggleRetain: function() {
+            this.publication.retain = !this.publication.retain;
         },
         isJSON: function(str) {
             try {
@@ -96,8 +124,5 @@ var vm = new Vue({
             }
             return true;
         }
-    },
-    mounted() {
-        this.connect();
     }
 })

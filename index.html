@@ -7,8 +7,9 @@
 
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp"
 	 crossorigin="anonymous">
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
-	 crossorigin="anonymous">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	<!-- <link rel="stylesheet" href="https://bootswatch.com/4/darkly/bootstrap.min.css"> -->
+	
 	<link rel="stylesheet" href="./site.css">
 </head>
 
@@ -18,69 +19,85 @@
 			<a class="navbar-brand" href="#">
 				<img src="./paper-plane.svg" width="30" height="30" class="d-inline-block align-top" alt=""> Mqtt Console
 			</a>
-			<!-- <span class="navbar-text float-right">Connected to .....</span> -->
-			<button class="btn btn-outline-success" data-toggle="modal" data-target="#connectionModal" type="button">Connection</button>
+			<div>
+					<span class="navbar-text">Connected to .....</span>
+					<button class="btn btn-outline-success" data-toggle="modal" data-target="#connectionModal" type="button">Connection</button>
+			</div>
+
 		</nav>
 		<main class="wrapper container-fluid">
-			<aside>
-				<h3>Subscriptions</h3>
-				<label for="inputEmail4">Topic</label>
-				<div class="input-group mb-3">
-					<input type="text" class="form-control">
-					<div class="input-group-append">
-						<button class="btn btn-outline-success" type="button">Subscribe</button>
+			<div class="row h-100">
+				<aside class="col-4">
+					<h5>Subscriptions</h5>
+					<label for="inputEmail4">Topic</label>
+					<div class="input-group mb-3">
+						<input v-model="subscription.topic" type="text" class="form-control">
+						<div class="input-group-append">
+							<button class="btn btn-outline-success" type="button" v-on:click="subscribe()">Subscribe</button>
+						</div>
 					</div>
-				</div>
-				<hr>
-				<ul class="list-group">
-					<li class="list-group-item">
-						<p class="float-left">/telemetry/#/butt</p>
-						<button type="button" class="btn btn-outline-danger float-right">Unsubscribe</button>
-					</li>
-				</ul>
-			</aside>
-			<article>
-				<h3>Publications</h3>
-				<section id="messages" style="height:60%">
-					d
-				</section>
-				<hr>
-				<section id="publish" style="height:30%">
-					<form>
-						<div class="form-row">
-							<div class="form-group col-md-8">
-								<label for="inputEmail4">Topic</label>
-								<input type="email" class="form-control" id="topic">
-							</div>
-							<div class="form-group col-md-2">
-								<label for="exampleFormControlSelect1">QoS</label>
-								<select class="form-control" id="exampleFormControlSelect1">
-									<option>0</option>
-									<option>1</option>
-									<option>2</option>
-								</select>
-							</div>
-							<div class="form-group col-md-2">
-								<label>Retain?</label>
-								<br>
-								<button type="button" class="btn btn-secondary" data-toggle="button">
-									<i class="far fa-square"></i>
-								</button>
-							</div>
-						</div>
-						<div class="form-group">
-							<label for="exampleFormControlTextarea1">Message</label>
-							<div class="input-group">
-								<textarea class="form-control" aria-label="With textarea"></textarea>
-								<div class="input-group-append">
-									<button type="submit" class="btn btn-outline-success">Publish</button>
+					<hr>
+					<ul class="list-group">
+						<li v-for="sub in subscriptions" class="list-group-item">
+							<p class="float-left">{{sub.topic}}</p>
+							<button type="button" class="btn btn-outline-danger float-right" v-on:click="unsubscribe(sub)">Unsubscribe</button>
+						</li>
+					</ul>
+				</aside>
+				<article class="col-8">
+					<div class="row" style="height:70%">
+						<!-- <h5>Publications</h5> -->
+						<div class="col-12" style="overflow-y: scroll;" v-chat-scroll>
+							<div v-for="msg in messages" class="card mb-3">
+								<div class="card-header d-flex justify-content-between">
+									<small class="text-muted">{{msg.datetime}}</small>
+									<small class="text-muted">{{msg.topic}}</small>
+									<small class="text-muted">QoS: {{msg.qos}}</small>
 								</div>
+								<div class="card-body">{{msg.payload}}</div>
 							</div>
 						</div>
-					</form>
-				</section>
+					</div>
+					<div class="row" style="height:30%">
+						<div class="col-12">
+							<form>
+								<div class="form-row">
+									<div class="form-group col-md-8">
+										<label>Topic</label>
+										<input v-model="publication.topic" type="text" class="form-control">
+									</div>
+									<div class="form-group col-md-2">
+										<label>QoS</label>
+										<select v-model.number="publication.qos" class="form-control">
+											<option>0</option>
+											<option>1</option>
+											<option>2</option>
+										</select>
+									</div>
+									<div class="form-group col-md-2">
+										<label>Retain?</label>
+										<br>
+										<button type="button" class="btn btn-outline-secondary btn-block" data-toggle="button" v-on:click="toggleRetain()">
+											<i v-if="publication.retain" class="far fa-check-square"></i>
+											<i v-else class="far fa-square"></i>
+										</button>
+									</div>
+								</div>
+								<div class="form-group">
+									<label>Message</label>
+									<div class="input-group">
+										<textarea v-model="publication.message" class="form-control"></textarea>
+										<div class="input-group-append">
+											<button v-on:click="publish()" type="submit" class="btn btn-outline-success">Publish</button>
+										</div>
+									</div>
+								</div>
+							</form>
+						</div>
+					</div>
+				</article>
+			</div>
 
-			</article>
 		</main>
 		<div id="connectionModal" class="modal fade" tabindex="-1" role="dialog">
 			<div class="modal-dialog" role="document">
@@ -92,34 +109,35 @@
 						</button>
 					</div>
 					<div class="modal-body">
-						<form>
+						<form id="connectionForm" @submit.prevent="connectionSubmit">
 							<div class="form-row">
 								<div class="form-group col-md-9">
-									<label for="hostname">Host</label>
-									<input type="text" class="form-control" id="hostname">
+									<label>Host</label>
+									<input v-model="connection.hostname" type="text" class="form-control">
 								</div>
 								<div class="form-group col-md-3">
-									<label for="port">Port</label>
-									<input type="text" class="form-control" id="port">
+									<label>Port</label>
+									<input v-model.number="connection.port" type="text" class="form-control">
 								</div>
 							</div>
 							<div class="form-group">
-								<label for="clientid">Client ID</label>
-								<input type="text" class="form-control" id="clientid">
+								<label>Client ID</label>
+								<input v-model="connection.clientId" type="text" class="form-control">
 							</div>
 							<div class="form-group">
-								<label for="username">Username</label>
-								<input type="text" class="form-control" id="username">
+								<label>Username</label>
+								<input v-model="connection.username" type="text" class="form-control">
 							</div>
 							<div class="form-group">
-								<label for="password">Password</label>
-								<input type="password" class="form-control" id="password">
+								<label>Password</label>
+								<input v-model="connection.password" type="password" class="form-control">
 							</div>
 						</form>
 					</div>
 					<div class="modal-footer">
-						<button type="button" class="btn btn-success">Connect</button>
-						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+						<button type="button" v-if="!client.connected" v-on:click="connect()" class="btn btn-success btn-block">Connect</button>
+						<button type="button" v-else v-on:click="disconnect()" class="btn btn-danger btn-block">Disconnect</button>
+						<!-- <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> -->
 					</div>
 				</div>
 			</div>
