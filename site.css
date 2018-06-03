@@ -1,24 +1,25 @@
-html, body {
+/* html, body {
     height: 100%;
 }
 
-/* .container {
+.container {
     min-height: 100%;
     overflow: hidden;
-} */
+}  */
 
-/*
-.page-wrapper {
+.wrapper {
     height: calc(100vh - 56px);
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    grid-template-rows: auto;
 }
 
-
+/* 
 input[type=color].form-control {
     height: 38px;
     padding: 1px;
-}
+} */
 
 .hidden {
     display: none;
 }
-*/

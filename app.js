@@ -1,12 +1,3 @@
-//var client = mqtt.connect('mqtt://test.mosquitto.org');
-// client.on('connect', () => {
-
-// });
-// client.on('message', (topic, message) => {
-
-// });
-
-
 var vm = new Vue({
     el: '#app',
     data: {
@@ -23,7 +14,7 @@ var vm = new Vue({
     methods: {
         connect: function() {
             var vu = this;
-            this.client = mqtt.connect('wss://test.mosquitto.org:8081');
+            this.client = mqtt.connect('ws://broker.mqttdashboard.com:8000/mqtt');
             this.client.on('connect', function() {
                 console.log('connected');
             });
