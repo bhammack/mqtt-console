@@ -7,9 +7,10 @@
 
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp"
 	 crossorigin="anonymous">
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB"
+	 crossorigin="anonymous">
 	<!-- <link rel="stylesheet" href="https://bootswatch.com/4/darkly/bootstrap.min.css"> -->
-	
+
 	<link rel="stylesheet" href="./site.css">
 </head>
 
@@ -20,8 +21,10 @@
 				<img src="./paper-plane.svg" width="30" height="30" class="d-inline-block align-top" alt=""> Mqtt Console
 			</a>
 			<div>
-					<span class="navbar-text">Connected to .....</span>
-					<button class="btn btn-outline-success" data-toggle="modal" data-target="#connectionModal" type="button">Connection</button>
+				<!-- <span class="navbar-text">
+					<i class="fas fa-check-circle"></i> Connected
+				</span> -->
+				<button class="btn btn-outline-info" data-toggle="modal" data-target="#connectionModal" type="button">Connection</button>
 			</div>
 
 		</nav>
@@ -29,13 +32,23 @@
 			<div class="row h-100">
 				<aside class="col-4">
 					<h5>Subscriptions</h5>
-					<label for="inputEmail4">Topic</label>
-					<div class="input-group mb-3">
-						<input v-model="subscription.topic" type="text" class="form-control">
-						<div class="input-group-append">
-							<button class="btn btn-outline-success" type="button" v-on:click="subscribe()">Subscribe</button>
+					<form>
+						<div class="form-row">
+							<div class="form-group col-md-2">
+								<label>Color</label>
+								<input v-model="subscription.color" type="color" class="form-control">
+							</div>
+							<div class="form-group col-md-10">
+								<label>Topic</label>
+								<div class="input-group">
+									<input v-model="subscription.topic" type="text" class="form-control">
+									<div class="input-group-append">
+										<button type="button" class="btn btn-outline-success" v-on:click="subscribe()">Subscribe</button>
+									</div>
+								</div>
+							</div>
 						</div>
-					</div>
+					</form>
 					<hr>
 					<ul class="list-group">
 						<li v-for="sub in subscriptions" class="list-group-item">
@@ -45,16 +58,22 @@
 					</ul>
 				</aside>
 				<article class="col-8">
-					<div class="row" style="height:70%">
+					<div class="row" style="height:70%;background-color:darkgrey">
 						<!-- <h5>Publications</h5> -->
 						<div class="col-12" style="overflow-y: scroll;" v-chat-scroll>
-							<div v-for="msg in messages" class="card mb-3">
+							<div v-for="msg in messages" class="card mb-3" v-bind:style="{borderColor: msg.color}">
 								<div class="card-header d-flex justify-content-between">
 									<small class="text-muted">{{msg.datetime}}</small>
 									<small class="text-muted">{{msg.topic}}</small>
-									<small class="text-muted">QoS: {{msg.qos}}</small>
+									<div>
+										<i v-if="msg.isJSON" class="fab fa-js-square"></i>
+										<i v-if="msg.retain" class="fas fa-anchor"></i>
+										<span class="badge badge-dark">{{msg.qos}}</span>
+									</div>
 								</div>
-								<div class="card-body">{{msg.payload}}</div>
+								<div class="card-body">
+									<pre>{{msg.payload}}</pre>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -77,9 +96,9 @@
 									<div class="form-group col-md-2">
 										<label>Retain?</label>
 										<br>
-										<button type="button" class="btn btn-outline-secondary btn-block" data-toggle="button" v-on:click="toggleRetain()">
-											<i v-if="publication.retain" class="far fa-check-square"></i>
-											<i v-else class="far fa-square"></i>
+										<button type="button" class="btn btn-outline-secondary" data-toggle="button" v-on:click="toggleRetain()">
+											<i v-if="publication.retain" class="fas fa-anchor"></i>
+											<i v-else class="fas fa-ban"></i>
 										</button>
 									</div>
 								</div>
@@ -88,7 +107,7 @@
 									<div class="input-group">
 										<textarea v-model="publication.message" class="form-control"></textarea>
 										<div class="input-group-append">
-											<button v-on:click="publish()" type="submit" class="btn btn-outline-success">Publish</button>
+											<button type="button" v-on:click="publish()" type="submit" class="btn btn-outline-success">Publish</button>
 										</div>
 									</div>
 								</div>
@@ -109,7 +128,7 @@
 						</button>
 					</div>
 					<div class="modal-body">
-						<form id="connectionForm" @submit.prevent="connectionSubmit">
+						<form id="connectionForm">
 							<div class="form-row">
 								<div class="form-group col-md-9">
 									<label>Host</label>
@@ -145,16 +164,18 @@
 	</div>
 
 	<!-- bootstrap -->
-	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
 	 crossorigin="anonymous"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
 	 crossorigin="anonymous"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T"
 	 crossorigin="anonymous"></script>
 	<!-- mqtt -->
 	<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+	<script src="https://unpkg.com/mqtt-wildcard/index.js"></script>
 	<!-- vue -->
-	<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	<!-- <script src="https://cdn.jsdelivr.net/npm/vue"></script> -->
 	<script src="https://gitcdn.link/repo/theomessin/vue-chat-scroll/master/dist/vue-chat-scroll.js"></script>
 	<!-- engine -->
 	<script src="./app.js"></script>

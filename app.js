@@ -1,3 +1,7 @@
+// uses mqttjs
+// uses mqttWildcard
+// uses jQuery
+
 var vm = new Vue({
     el: '#app',
     data: {
@@ -10,9 +14,9 @@ var vm = new Vue({
         },
         subscriptions: [],
         subscription: {
-            topic: '',
-            qos: 0,
-            color: '#ffffff'
+            topic: 'testtopic/#',
+            qos: 2,
+            color: '#ff0000'
         },
         publication: {
             topic: '',
@@ -34,10 +38,12 @@ var vm = new Vue({
             });
             this.client.on('connect', function() {
                 console.log('connected');
+                $('#connectionModal').modal('hide');
             });
             this.client.on('message', function(topic, message, packet) {
                 var payload = message.toString();
                 vm.messages.push({
+                    color: vm.getColorForTopic(topic),
                     isJSON: vm.isJSON(payload),
                     datetime: new Date().toLocaleString(),
                     topic: topic,
@@ -96,7 +102,11 @@ var vm = new Vue({
                         alert(err);
                     } else {
                         for (var i = 0; i < granted.length; i++) {
-                            vm.subscriptions.push({topic: granted[i].topic, qos: granted[i].qos});
+                            vm.subscriptions.push({
+                                topic: granted[i].topic, 
+                                qos: granted[i].qos,
+                                color: vm.subscription.color
+                            });
                         }
                         vm.subscription.topic = '';
                     }
@@ -112,17 +122,32 @@ var vm = new Vue({
             if (index > -1) {
                 this.subscriptions.splice(index, 1);
             }
+            // Also remove all messages that were generated as a result of that subscription.
+            var i = this.messages.length;
+            while (i--) {
+                if (mqttWildcard(this.messages[i].topic, subscription.topic) != null) {
+                    this.messages.splice(i, 1);
+                }
+            }
         },
         toggleRetain: function() {
             this.publication.retain = !this.publication.retain;
         },
         isJSON: function(str) {
             try {
-                JSON.parse(str);
+                return (JSON.parse(str) && !!str);
             } catch (e) {
                 return false;
             }
-            return true;
+        },
+        getColorForTopic: function(topic) {
+            for (var i = 0; i < this.subscriptions.length; i++) {
+                if (mqttWildcard(topic, this.subscriptions[i].topic) != null) {
+                    console.log(this.subscriptions[i].color);
+                    return this.subscriptions[i].color;
+                }
+            }
+            return null;
         }
     }
 })

@@ -11,11 +11,11 @@ html, body {
     height: calc(100vh - 57px);
 }
 
-/* 
+
 input[type=color].form-control {
     height: 38px;
     padding: 1px;
-} */
+}
 
 .hidden {
     display: none;
